@@ -31,8 +31,28 @@ const encontrar = async (produto) => {
   return produtoExiste;
 };
 
+const encontrarTodos = async () => {
+  const produtos = await db.produto.findAll({});
+  return produtos;
+};
+
+const encontrarPorId = async (id) => {
+  const produtoExiste = await db.produto.findOne({
+    where: { Codigo: id },
+  });
+
+  return produtoExiste;
+};
+
+const excluirProduto = async (produto) => {
+  await produto.destroy();
+};
+
 module.exports = {
   criar,
   atualizar,
   encontrar,
+  encontrarTodos,
+  encontrarPorId,
+  excluirProduto,
 };

@@ -27,6 +27,12 @@ describe("Testes de integração de Produtos", () => {
     Preco: 50,
   };
 
+  const outroProduto = {
+    Codigo: "12345",
+    Descricao: "Segundo Produto",
+    Preco: 50,
+  };
+
   test("Deve ser possível criar um novo produto", async () => {
     const res = await request(app).post("/produto").send(payloadRequest);
 
@@ -46,5 +52,54 @@ describe("Testes de integração de Produtos", () => {
     expect(res.status).toBe(200);
     expect(res.body.Descricao).toBe(duplicateProduto.Descricao);
     expect(res.body.Preco).toBe(duplicateProduto.Preco);
+  });
+
+  test("Deve ser possível atualizar um produto", async () => {
+    await request(app).post("/produto").send(payloadRequest);
+    const res = await request(app).put("/produto").send(duplicateProduto);
+
+    expect(res.status).toBe(200);
+    expect(res.body.Descricao).toBe(duplicateProduto.Descricao);
+    expect(res.body.Preco).toBe(duplicateProduto.Preco);
+  });
+
+  test("Não deve ser possível atualizar um produto com payload errado", async () => {
+    const res = await request(app).put("/produto").send(produtoErrado);
+
+    expect(res.status).toBe(400);
+  });
+
+  test("Não deve ser possível atualizar um produto inexistente", async () => {
+    await request(app).post("/produto").send(payloadRequest);
+    const res = await request(app).put("/produto").send(outroProduto);
+
+    expect(res.status).toBe(405);
+  });
+
+  test("Deve ser possível retornar todos os produtos", async () => {
+    await request(app).post("/produto").send(payloadRequest);
+    await request(app).post("/produto").send(outroProduto);
+    const res = await request(app).get("/produto");
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(2);
+  });
+
+  test("Deve ser possível excluir um produto", async () => {
+    await request(app).post("/produto").send(payloadRequest);
+    const res = await request(app).delete("/produto/123");
+
+    expect(res.status).toBe(200);
+    expect(res.body.Codigo).toBe(payloadRequest.Codigo);
+    expect(res.body.Descricao).toBe(payloadRequest.Descricao);
+    expect(res.body.Preco).toBe(payloadRequest.Preco);
+  });
+
+  test("Não deve ser possível excluir um produto inexistente", async () => {
+    await request(app).post("/produto").send(payloadRequest);
+    const res = await request(app).delete("/produto/12222");
+
+    expect(res.status).toBe(405);
+    expect(res.body.erro).toBe("Produto não encontrado");
   });
 });

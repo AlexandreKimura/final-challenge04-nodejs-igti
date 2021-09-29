@@ -70,4 +70,64 @@ app.post(
   }
 );
 
+app.put(
+  "/produto",
+  check("Codigo", "Código deve ser informado").notEmpty(),
+  check("Descricao", "Descrição deve ser informado").notEmpty(),
+  check("Preco", "O valor deve ser um número").notEmpty().isFloat().isInt(),
+
+  async (req, res) => {
+    const erros = validationResult(req);
+    if (!erros.isEmpty()) {
+      return res.status(400).json({ erro: erros.array() });
+    }
+
+    try {
+      const produtoExiste = await produto.encontrar(req.body);
+
+      if (produtoExiste) {
+        const response = await produto.atualizar(req.body);
+        return res.status(200).json(response);
+      }
+
+      return res.status(405).json({ erro: `Produto não encontrado` });
+    } catch (erro) {
+      return res.status(405).json({ erro: erro.message });
+    }
+  }
+);
+
+app.get(
+  "/produto",
+
+  async (req, res) => {
+    try {
+      const produtos = await produto.encontrarTodos();
+      return res.json(produtos);
+    } catch (erro) {
+      return res.status(405).json({ erro: erro.message });
+    }
+  }
+);
+
+app.delete(
+  "/produto/:id",
+
+  async (req, res) => {
+    try {
+      const response = await produto.encontrarPorId(req.params.id);
+
+      if (!response) {
+        throw new Error("Produto não encontrado");
+      }
+
+      await produto.excluirProduto(response);
+
+      return res.json(response);
+    } catch (erro) {
+      return res.status(405).json({ erro: erro.message });
+    }
+  }
+);
+
 module.exports = app;
